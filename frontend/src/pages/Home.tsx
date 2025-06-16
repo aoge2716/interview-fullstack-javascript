@@ -3,6 +3,7 @@ import SearchBar from '../components/SearchBar';
 import CityList from '../components/CityList';
 import Pagination from '../components/Pagination';
 import { City } from '../types/City';
+import AddCityForm from '../components/AddCityForm';
 
 export default function Home() {
   const [search, setSearch] = useState('');
@@ -25,6 +26,11 @@ export default function Home() {
   return (
     <div style={{ padding: '2rem' }}>
       <h1>City Search</h1>
+      <AddCityForm onCityAdded={() => {
+        fetchCities();
+        setPage(1);
+      }} />
+
       <SearchBar value={search} onChange={(val) => {
         setPage(1);
         setSearch(val);
