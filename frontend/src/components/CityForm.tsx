@@ -1,36 +1,53 @@
-import { useState } from "react";
+import { useState, useEffect } from 'react';
+import { City } from '../types/City';
 
 type Props = {
-  onCityAdded: () => void;
+  onSubmit: () => void;
+  initialData?: City | null;
 };
 
-export default function AddCityForm({ onCityAdded }: Props){
+export default function CityForm({ onSubmit, initialData }: Props) {
   const [uuid, setUuid] = useState('');
   const [cityName, setCityName] = useState('');
   const [count, setCount] = useState<number>(0);
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    if (initialData) {
+      setUuid(initialData.uuid);
+      setCityName(initialData.cityName);
+      setCount(initialData.count);
+    }
+  }, [initialData]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/cities`,{
-      method: 'POST',
+    const method = initialData ? 'PUT' : 'POST';
+    const url = initialData
+      ? `${API_URL}/cities/${initialData._id}`
+      : `${API_URL}/cities`;
+
+    const res = await fetch(url, {
+      method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ uuid, cityName, count }),
     });
 
-    if(res.ok){
+    if (res.ok) {
       setUuid('');
       setCityName('');
       setCount(0);
-      onCityAdded();
+      onSubmit();
     } else {
-      console.error('Failed to add city');
+      console.error('Failed to save city');
     }
   };
 
-  return(
+  return (
     <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
-      <h3>Add New City</h3>
+      <h3>{initialData ? 'Edit City' : 'Add New City'}</h3>
       <input
         type="text"
         placeholder="UUID"
@@ -52,7 +69,7 @@ export default function AddCityForm({ onCityAdded }: Props){
         onChange={(e) => setCount(parseInt(e.target.value))}
         required
       />
-      <button type="submit">Add City</button>
+      <button type="submit">{initialData ? 'Update' : 'Add'} City</button>
     </form>
-  )
+  );
 }
