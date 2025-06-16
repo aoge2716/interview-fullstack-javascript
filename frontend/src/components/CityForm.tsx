@@ -1,33 +1,37 @@
-import { useState, useEffect } from 'react';
-import { City } from '../types/City';
+import { useEffect, useState } from "react";
+import { City } from "../types/City";
 
 type Props = {
+  initialData: City | null;
   onSubmit: () => void;
-  initialData?: City | null;
 };
 
-export default function CityForm({ onSubmit, initialData }: Props) {
+export default function CityForm({ initialData, onSubmit }: Props) {
   const [uuid, setUuid] = useState('');
   const [cityName, setCityName] = useState('');
   const [count, setCount] = useState<number>(0);
-
-  const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     if (initialData) {
       setUuid(initialData.uuid);
       setCityName(initialData.cityName);
       setCount(initialData.count);
+    } else {
+      setUuid('');
+      setCityName('');
+      setCount(0);
     }
   }, [initialData]);
 
+  const isEdit = !!initialData;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const url = isEdit
+      ? `${import.meta.env.VITE_API_URL}/cities/${initialData!._id}`
+      : `${import.meta.env.VITE_API_URL}/cities`;
 
-    const method = initialData ? 'PUT' : 'POST';
-    const url = initialData
-      ? `${API_URL}/cities/${initialData._id}`
-      : `${API_URL}/cities`;
+    const method = isEdit ? 'PUT' : 'POST';
 
     const res = await fetch(url, {
       method,
@@ -36,18 +40,15 @@ export default function CityForm({ onSubmit, initialData }: Props) {
     });
 
     if (res.ok) {
-      setUuid('');
-      setCityName('');
-      setCount(0);
       onSubmit();
     } else {
-      console.error('Failed to save city');
+      console.error(`${isEdit ? 'Update' : 'Add'} failed`);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
-      <h3>{initialData ? 'Edit City' : 'Add New City'}</h3>
+      <h3>{isEdit ? 'Edit City' : 'Add New City'}</h3>
       <input
         type="text"
         placeholder="UUID"
@@ -69,7 +70,16 @@ export default function CityForm({ onSubmit, initialData }: Props) {
         onChange={(e) => setCount(parseInt(e.target.value))}
         required
       />
-      <button type="submit">{initialData ? 'Update' : 'Add'} City</button>
+      <button type="submit">{isEdit ? 'Update' : 'Add'}</button>
+      {isEdit && (
+        <button
+          type="button"
+          onClick={() => onSubmit()}
+          style={{ marginLeft: '1rem' }}
+        >
+          Cancel
+        </button>
+      )}
     </form>
   );
 }
